@@ -53,4 +53,13 @@ $clean=& $script @cleanArgs
 Add-Content $cleanArgs.GuidanceTarget "`nlater personal guidance"
 & $script @cleanArgs -Action Restore -BackupPath $clean.backup | Out-Null
 Check ((Get-Content $cleanArgs.GuidanceTarget -Raw).Contains('later personal guidance')) 'Clean restore removed later guidance'
+New-Item -ItemType Directory -Force (Join-Path $source 'scripts') | Out-Null
+$subprocessScript=Join-Path $source 'scripts/manage-installation.ps1'
+Copy-Item -LiteralPath $script -Destination $subprocessScript
+$subprocessSkills=Join-Path $root 'subprocess-skills'
+$subprocessGuidance=Join-Path $root 'subprocess-AGENTS.md'
+$subprocessBackups=Join-Path $root 'subprocess-backups'
+& powershell -NoProfile -ExecutionPolicy Bypass -File $subprocessScript -SkillsTarget $subprocessSkills -GuidanceTarget $subprocessGuidance -BackupBase $subprocessBackups | Out-Null
+Check ($LASTEXITCODE -eq 0) 'Default SourceRoot failed in powershell -File subprocess'
+foreach($name in $new) { Check (Test-Path "$subprocessSkills/$name/SKILL.md") 'Subprocess did not resolve source root' }
 Write-Output "Installation scenarios passed. Synthetic fixtures retained at $root"

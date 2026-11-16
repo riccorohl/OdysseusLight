@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidateSet('Install','Restore')][string]$Action = 'Install',
-    [string]$SourceRoot = (Split-Path -Parent $PSScriptRoot),
+    [string]$SourceRoot = '',
     [string]$SkillsTarget = (Join-Path $HOME '.agents/skills'),
     [string]$GuidanceTarget = (Join-Path $HOME '.codex/AGENTS.md'),
     [string]$BackupBase = (Join-Path $HOME '.codex/backups/odysseuslight'),
@@ -9,6 +9,7 @@ param(
     [int]$TestFailureAfter = 0
 )
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($SourceRoot)) { $SourceRoot = Split-Path -Parent $PSScriptRoot }
 $old = @('bootstrap-project','onboard-project','plan-milestone','deliver-issue','check-context-health')
 $new = @('odysseus-plan-project','odysseus-plan-milestone','odysseus-review-plan')
 $names = $old + $new
