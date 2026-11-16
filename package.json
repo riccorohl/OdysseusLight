@@ -1,0 +1,11 @@
+{
+  "name": "odysseuslight",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portable product and milestone planning skills",
+  "scripts": {
+    "validate": "node scripts/validate-docs.cjs",
+    "test": "node scripts/validate-docs.cjs && powershell -NoProfile -ExecutionPolicy Bypass -File tests/installation.tests.ps1"
+  },
+  "engines": { "node": ">=18" }
+}
