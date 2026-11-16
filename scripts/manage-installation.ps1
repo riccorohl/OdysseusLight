@@ -1,11 +1,12 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Install','Restore')][string]$Action = 'Install',
+    [ValidateSet('Install','Update','Restore')][string]$Action = 'Install',
     [string]$SourceRoot = '',
     [string]$SkillsTarget = (Join-Path $HOME '.agents/skills'),
     [string]$GuidanceTarget = (Join-Path $HOME '.codex/AGENTS.md'),
     [string]$BackupBase = (Join-Path $HOME '.codex/backups/odysseuslight'),
     [string]$BackupPath,
+    [string]$PreviousBackupPath,
     [int]$TestFailureAfter = 0
 )
 $ErrorActionPreference = 'Stop'
@@ -98,6 +99,8 @@ $block = @'
 
 - Use OdysseusLight for product and milestone planning when relevant to the request. Planning documents remain readable by any implementation system.
 - The planner defines milestone outcomes and boundaries. The implementer chooses technical steps and execution splits after inspecting the repository.
+- During planning, resolve blocking product decisions conversationally before marking a milestone ready for implementation. Continue independent planning while a decision is pending; keep ordinary technical choices with the implementer.
+- Carry forward decisions and authorization already given. Do not request duplicate approvals for unchanged scope or turn routine discoveries into new permission procedures.
 - Preserve intended outcomes and meaningful constraints while adapting routine implementation details to evidence. Raise material product, cost, or consequential-risk changes with the owner.
 - Preserve unrelated work and personal guidance. Distinguish observed behavior, desired behavior, assumptions, and unresolved decisions. Never claim unverified work is complete.
 - Do not automatically publish issues, impose execution envelopes, or migrate existing project instructions. Identify conflicting legacy guidance and propose scoped adoption when requested.
@@ -117,7 +120,18 @@ $same = $originalBlock -ceq $block
 foreach ($name in $old) { if (Test-Path -LiteralPath (Join-Path $SkillsTarget $name)) { $same=$false } }
 foreach ($name in $new) { if ((Tree-Id (Join-Path $SkillsTarget $name)) -ne (Tree-Id (Join-Path $SourceRoot "skills/$name"))) { $same=$false } }
 if ($same) { [pscustomobject]@{status='already-installed'; backupBase=$BackupBase}; return }
-foreach ($name in $new) { if (Test-Path -LiteralPath (Join-Path $SkillsTarget $name)) { throw "Existing OdysseusLight skill differs: $name. Restore or preserve it before replacing." } }
+if ($Action -eq 'Update') {
+    if (!$PreviousBackupPath) { throw 'Update requires -PreviousBackupPath from the installed version.' }
+    $PreviousBackupPath = Assert-PlainPath $PreviousBackupPath
+    $previous = Get-Content -LiteralPath (Join-Path $PreviousBackupPath 'installation.json') -Raw | ConvertFrom-Json
+    if ($previous.skillsTarget -ne $SkillsTarget -or $previous.guidanceTarget -ne $GuidanceTarget) { throw 'Update targets must match the previous installation.' }
+    foreach ($name in $names) {
+        if ((Tree-Id (Join-Path $SkillsTarget $name)) -ne $previous.installed.$name) { throw "Managed skill changed since installation: $name. Preserve it before updating." }
+    }
+    if ($originalBlock -cne $previous.installedBlock) { throw 'Managed guidance changed; update stopped without writes.' }
+} else {
+    foreach ($name in $new) { if (Test-Path -LiteralPath (Join-Path $SkillsTarget $name)) { throw "Existing OdysseusLight skill differs: $name. Use Update with the previous backup, or preserve it before replacing." } }
+}
 $BackupPath = Join-Path $BackupBase ((Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0,8))
 New-Item -ItemType Directory -Force (Join-Path $BackupPath 'skills'),$SkillsTarget | Out-Null
 foreach ($name in $names) { $p=Join-Path $SkillsTarget $name; if (Test-Path -LiteralPath $p) { Copy-Item -LiteralPath $p -Destination (Join-Path $BackupPath "skills/$name") -Recurse } }
@@ -131,6 +145,7 @@ $count=0
 try {
     foreach ($name in $old) { Remove-Owned (Join-Path $SkillsTarget $name) $SkillsTarget }
     foreach ($name in $new) {
+        if ($Action -eq 'Update') { Remove-Owned (Join-Path $SkillsTarget $name) $SkillsTarget }
         Copy-Item -LiteralPath (Join-Path $SourceRoot "skills/$name") -Destination (Join-Path $SkillsTarget $name) -Recurse
         $count++; if ($TestFailureAfter -gt 0 -and $count -eq $TestFailureAfter) { throw 'Synthetic installation failure' }
     }
@@ -146,4 +161,5 @@ try {
     if ($guidanceExisted) { Write-Text $GuidanceTarget $original } elseif (Test-Path -LiteralPath $GuidanceTarget) { Remove-Item -LiteralPath $GuidanceTarget }
     throw
 }
-[pscustomobject]@{status='installed';backup=$BackupPath;skills=$new;restart='Start a new chat to refresh skill discovery.'}
+$resultStatus = if ($Action -eq 'Update') { 'updated' } else { 'installed' }
+[pscustomobject]@{status=$resultStatus;backup=$BackupPath;skills=$new;restart='Start a new chat to refresh skill discovery.'}
