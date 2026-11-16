@@ -13,7 +13,9 @@ State the user-visible result or uncertainty to resolve, requirements, failure b
 
 Label requirements, constraints with reasons, suggestions, assumptions, and open questions separately. Preserve accepted architectural decisions. Do not require the owner to choose routine implementation details or supply information discoverable in the repository.
 
-If a product decision is unresolved, explain which part depends on it and continue independent specification work. A technical unknown can become an investigation inside the milestone; it does not automatically require another issue, approval, or milestone. Stop only the affected action when it would cross a consequential authorization boundary.
+Own consequential planning choices through resolution. Investigate available facts first; then present concrete options, practical consequences, a recommendation, and a focused owner question. Incorporate the answer and continue refining the specification. Do not finish by handing a list of product decisions to the implementer or calling a draft a complete plan. If the owner pauses or evidence is unavailable, identify the affected unresolved scope and describe progress truthfully. Continue independent specification work meanwhile.
+
+Distinguish known prerequisites from blocking uncertainties. A milestone can be fully planned while awaiting a known predecessor; record that dependency rather than inventing an activation decision. An unresolved product choice that changes behavior or acceptance criteria prevents calling the affected specification implementation-ready. A routine technical unknown can become an investigation inside the milestone; it does not automatically require another issue, approval, or milestone. Stop only the affected action when it would cross a consequential authorization boundary.
 
 ## Size by outcome
 
@@ -25,4 +27,4 @@ Provide relevant source links, the intended outcome, acceptance criteria, meanin
 
 Mark new or materially revised scope Draft until approved; retain approval for unchanged settled scope. Existing approval in the conversation counts when its scope is clear. Do not demand a special phrase, artifact hash, or second approval for the same decision.
 
-Review the document for contradictions, unsupported claims, usable links, and accidental implementation mandates. Report its status and outstanding decisions. Do not generate implementation issues, publish milestones, change application code, or require vendor-specific modes.
+Review the document for contradictions, unsupported claims, usable relative links to actual source locations, and accidental implementation mandates. Report planning completeness, owner approval, and prerequisite readiness separately. Existing scoped approval does not need a duplicate activation approval. Explain whether the specification was saved to a named file or exists only in chat; do not claim a saved artifact or completed planning when either is untrue. Do not generate implementation issues, publish milestones, change application code, or require vendor-specific modes.
